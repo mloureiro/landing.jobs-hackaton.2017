@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as PostController from '../controllers/post.controller';
+import * as GitHubAnalyzerController from '../controllers/githubanalyzer.controller';
 const router = new Router();
 
 // Get all Posts
@@ -13,5 +14,7 @@ router.route('/posts').post(PostController.addPost);
 
 // Delete a post by cuid
 router.route('/posts/:cuid').delete(PostController.deletePost);
+
+router.route('analyzer/:user/github').get(GitHubAnalyzerController.getRepos);
 
 export default router;
