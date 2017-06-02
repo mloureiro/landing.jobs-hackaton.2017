@@ -20,6 +20,9 @@
     "type": "git",
     "url": "git+https://github.com/Hashnode/mern-starter.git"
   },
+  "pre-commit": [
+    "lint"
+  ],
   "bugs": {
     "url": "https://github.com/Hashnode/mern-starter/issues"
   },
