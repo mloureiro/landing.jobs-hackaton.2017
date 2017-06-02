@@ -11,6 +11,10 @@ import config from '../webpack.config.dev';
 import webpackDevMiddleware from 'webpack-dev-middleware';
 import webpackHotMiddleware from 'webpack-hot-middleware';
 
+// Initialize env variables
+// var dotenv = require('dotenv');
+// dotenv.load();
+
 // Initialize the Express App
 const app = new Express();
 
