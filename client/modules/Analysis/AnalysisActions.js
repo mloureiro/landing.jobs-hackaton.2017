@@ -13,6 +13,6 @@ export function addResult(result) {
 
 export function fetchResult(username) {
   return (dispatch) => {
-    return callApi(`analyzer/${username}/github`).then(res => dispatch(addResult(res.result)));
+    return callApi(`analyzer/${username}/github`).then(res => dispatch(addResult(res.content)));
   };
 }
