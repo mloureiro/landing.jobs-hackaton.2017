@@ -230,32 +230,36 @@ export function getSocialScore(req, res) {
       const repos = result.data;
 
       const repoDetailsPromises = repos
-        .filter(repo => repo != null && repo.full_name != null && repo.full_name.indexOf('.') === -1)
+        .filter(repo => repo != null && repo.full_name != null)
         .map(repo => {
-          console.log('repo.full_name=>', repo.full_name);
-          console.log('repo.name=>', repo.name);
-
-          return githubCliDotCom.getData(`/repos/${repo.full_name}`);
+          return githubCliDotCom.getData({ path: `/repos/${repo.full_name}` });
         });
 
       Promise
         .all(repoDetailsPromises)
         .then(repoDetailsValues => {
-          const reposDetails = repoDetailsValues.data;
-
-          console.log('----------------------2-------------------', reposDetails.length);
-
-          const pullsPromises = reposDetails
+          const pullsPromises = repoDetailsValues
+            .map(repoResult => repoResult.data)
             .filter(repoResult => repoResult.fork === true)
             .map(repoResult => {
-              console.log(repoResult);
               const fullPath = `/repos/${repoResult.parent.full_name}/pulls?head=${req.params.user}:${repoResult.default_branch}&state=all`;
               return githubCliDotCom.getData({ path: fullPath });
             });
 
+            // 0-5 => qualidade baixa
+            // 6-10 => qualidade media
+            // >10 => qualidade alta
+
+
+
           Promise
             .all(pullsPromises)
-            .then(pullsValues => res.json(pullsValues))
+            .then(pullsValues => {
+              const pulls = pullsValues
+                .map(pulls => pulls.data);
+
+              res.json({});
+            })
             .catch(error => {
               console.log(error);
               res.status(500).send(error);
