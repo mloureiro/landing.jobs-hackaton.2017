@@ -5,9 +5,9 @@ const githubCliDotCom = new GitHubClient({
   token: '99c09458d09120f35c0674528c58f279898e82a1'// process.env.TOKEN_GITHUB_DOT_COM
 });
 
-const WATCHERS_THRESHOLD = 2;
-const STARGAZERS_THRESHOLD = 2;
-const FORKS_THRESHOLD = 2;
+const WATCHERS_THRESHOLD = 5;
+const STARGAZERS_THRESHOLD = 5;
+const FORKS_THRESHOLD = 1;
 const README_FILE_SIZE_THRESHOLD = 200;
 
 /**
@@ -83,7 +83,6 @@ export function getScore(req, res) {
     var reposPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/repos` }));
     var followersPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/followers` }));
 
-
     Promise.all([userPromise, reposPromise, followersPromise])
         .then(result =>  {
             var user = result[0].data;
@@ -113,6 +112,10 @@ export function getScore(req, res) {
                         }
                     })
 
+                    var lastPushDate = repo.pushed_at;
+
+                    var diff = Math.abs(new Date() - lastPushDate);
+
                     reposTotalStars += repo.stargazers_count;
                     reposTotalWatchers += repo.watchers_count;
 
@@ -128,7 +131,7 @@ export function getScore(req, res) {
                         finalScore += 2;
                     }
 
-                    if(hasBlog) {
+                    if(userHasBlog) {
                         finalScore += 2;
                     }
 
@@ -137,19 +140,18 @@ export function getScore(req, res) {
                     finalScore += reposTotalWatchers;
                 }
             });
-            
-            /*
+
+            res.json({
                 totalStars: reposTotalStars,
                 totalWatchers: reposTotalWatchers,
                 userFolowers: userTotalFollowers,
                 hasBlog: userHasBlog,
-            */
-            res.json({
                 total_score: finalScore
             });
             
         })
-        .catch(error => {
+        .catch(function (error) {
+            console.log(error);
             res.status(500).send(error);
         });
 }
@@ -167,34 +169,30 @@ export function getSocialScore(req, res) {
 
     Promise.all([reposPromise])
         .then(result =>  {
-            var repos = result[1].data;
+            var repos = result[0].data;
 
-            var statusArray = ["test"];
+            var statusArray = [];
 
             repos.map((repo) => {
-                // Check if user is contributing to any projects
-                if(repo.fork) {
-                    githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/pulls` })
-                        .then(pulls => {
-                            pulls.map((pullRequest) => {
+                //TODO(Nuno): Check if user is contributing to any projects
 
-                                statusArray.push(pullRequest.state);
+                githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/pulls?state=closed` })
+                    .then(pulls => {
 
-                                if(pullRequest.state == 'merged') {
+                        statusArray.push(pulls);
 
-                                }
-                            });
-                        })
-                        .catch(error => {
-                            res.status(500).send(error);
-                        });
-                }
+                        //pulls.map((pullRequest) => { });
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
             });
 
              res.json(statusArray);
 
         })
         .catch(error => {
+            console.log(error);
             res.status(500).send(error);
         });
 }
