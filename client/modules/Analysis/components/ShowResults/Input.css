@@ -1,0 +1,60 @@
+.inputWrapper {
+  width: 300px;
+  margin: auto;
+  vertical-align: middle;
+  white-space: nowrap;
+  position: relative;
+}
+
+.mainInput {
+  width: 300px;
+  height: 50px;
+  background: #2b303b;
+  border: none;
+  font-size: 10pt;
+  float: left;
+  color: #63717f;
+  padding-left: 15px;
+  padding-right: 45px;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+
+  -webkit-transition: background .55s ease;
+  -moz-transition: background .55s ease;
+  -ms-transition: background .55s ease;
+  -o-transition: background .55s ease;
+  transition: background .55s ease;
+}
+
+.mainInput::-webkit-input-placeholder {
+  color: #65737e;
+}
+
+.mainInput:-moz-placeholder {
+  color: #65737e;
+}
+
+.mainInput::-moz-placeholder {
+  color: #65737e;
+}
+
+.mainInput:-ms-input-placeholder {
+  color: #65737e;
+}
+
+.inputWrapper .mainInput:hover,
+.inputWrapper .mainInput:focus,
+.inputWrapper .mainInput:active {
+  outline: none;
+  background: #ffffff;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  right: 17px;
+  margin-top: 17px;
+  z-index: 1;
+  color: #4f5b66;
+}
