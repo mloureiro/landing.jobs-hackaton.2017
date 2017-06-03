@@ -2,7 +2,7 @@
 import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 import App from './modules/App/App';
-import WelcomePage from './modules/Analysis/pages/ShowResultsPage/WelcomePage';
+import WelcomePage from './modules/Analysis/pages/WelcomePage/WelcomePage';
 
 // require.ensure polyfill for node
 if (typeof require.ensure !== 'function') {
@@ -24,10 +24,7 @@ if (process.env.NODE_ENV !== 'production') {
 // More info: http://blog.mxstbr.com/2016/01/react-apps-with-pages/
 export default (
   <Route path="/" component={App}>
-    <IndexRoute
-      path="/welcome"
-      component={WelcomePage}
-    />
+    <IndexRoute component={WelcomePage} />
     <Route
       path="/results/:username"
       getComponent={(nextState, cb) => {
