@@ -1,8 +1,11 @@
 import React, { PropTypes } from 'react';
 import Helmet from 'react-helmet'
+import { TagCloud } from 'react-tagcloud';
 import { connect } from 'react-redux';
+import Avatar from '../../components/Avatar/Avatar'
+import Score from '../../components/Score/Score'
 
-// Import Style
+import styles from './ShowResultsPage.css';
 
 // Import Actions
 import { fetchResult } from '../../AnalysisActions';
@@ -11,22 +14,20 @@ import { fetchResult } from '../../AnalysisActions';
 import { getResult } from '../../AnalysisReducer';
 
 export function ShowResultsPage(props) {
-  console.log(props.result)
-
   if (props.result) {
+    let languagesCloud = []
+    for (let key in props.result.languages) {
+      languagesCloud.push({ value: key, count: props.result.languages[key] })
+    }
+
     return (
       <div>
-        <Helmet title={props.result.name} />
-        <div>
-          <div>{props.result.name}</div>
-          <img alt="Avatar" src={props.result.avatar_url} />
-          <div>{props.result.company}</div>
-          <div>{props.result.location}</div>
-        </div>
-        <div>
-          <div>{props.result.quantity_repos} repos created</div>
-          <div>{props.result.quantity_followers} followers</div>
-        </div>
+        <div className={styles['avatarArea']}><Avatar profileData={props.result} /></div>
+        <TagCloud minSize={12}
+            maxSize={35}
+            tags={languagesCloud}
+            onClick={tag => alert(`'${tag.value}' was selected!`)} />
+        <div className={styles['scoreArea']}><Score className={styles.scoreArea} score={20} /></div>
       </div>
     );
   }
