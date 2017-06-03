@@ -25,11 +25,8 @@ if (process.env.NODE_ENV !== 'production') {
 export default (
   <Route path="/" component={App}>
     <IndexRoute
-      getComponent={(nextState, cb) => {
-        require.ensure([], require => {
-          cb(null, require('./modules/Analysis/pages/ShowResultsPage/ShowResultsPage').default);
-        });
-      }}
+      path="/welcome"
+      component={WelcomePage}
     />
     <Route
       path="/results/:username"
@@ -38,10 +35,6 @@ export default (
           cb(null, require('./modules/Analysis/pages/ShowResultsPage/ShowResultsPage').default);
         });
       }}
-    />
-    <Route
-      path="/welcome"
-      component={WelcomePage}
     />
   </Route>
 );
