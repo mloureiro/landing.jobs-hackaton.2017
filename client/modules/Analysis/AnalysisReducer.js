@@ -18,7 +18,7 @@ const AnalysisReducer = (state = initialState, action) => {
 /* Selectors */
 
 // Get result by username
-export const getResult = (state, username) => state.results.data.filter(result => result.username === username)[0];
+export const getResult = (state, username) => state.results.data.filter(result => result.login === username)[0];
 
 // Export Reducer
 export default AnalysisReducer;

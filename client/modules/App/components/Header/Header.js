@@ -10,7 +10,7 @@ export function Header() {
     <div className={styles.header}>
       <div className={styles.content}>
         <h1 className={styles['site-title']}>
-          <Link to="/" ><FormattedMessage id="siteTitle" /></Link>
+          WhatTheGithub
         </h1>
       </div>
     </div>
