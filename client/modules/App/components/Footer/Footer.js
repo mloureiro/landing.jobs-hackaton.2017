@@ -6,7 +6,7 @@ import styles from './Footer.css';
 export function Footer() {
   return (
     <div className={styles.footer}>
-      <p>&copy; 2017 Landing Careers Festival</p>
+      <p><strong>WhatTheGitHub</strong> &copy; 2017 Landing Careers Festival</p>
     </div>
   );
 }
