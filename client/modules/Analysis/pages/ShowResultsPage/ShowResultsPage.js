@@ -11,19 +11,29 @@ import { fetchResult } from '../../AnalysisActions';
 import { getResult } from '../../AnalysisReducer';
 
 export function ShowResultsPage(props) {
+  console.log(props.result)
+
+  if (props.result) {
+    return (
+      <div>
+        <Helmet title={props.result.name} />
+        <div>
+          <div>{props.result.name}</div>
+          <img alt="Avatar" src={props.result.avatar_url} />
+          <div>{props.result.company}</div>
+          <div>{props.result.location}</div>
+        </div>
+        <div>
+          <div>{props.result.quantity_repos} repos created</div>
+          <div>{props.result.quantity_followers} followers</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <Helmet title={props.result.name} />
-      <div>
-        <div>{props.result.name}</div>
-        <img alt="Avatar" src={props.result.avatar_url} />
-        <div>{props.result.company}</div>
-        <div>{props.result.location}</div>
-      </div>
-      <div>
-        <div>{props.result.quantity_repos} repos created</div>
-        <div>{props.result.quantity_followers} followers</div>
-      </div>
+      Profile not found
     </div>
   );
 }
