@@ -2,6 +2,7 @@
 import React from 'react';
 import { Route, IndexRoute } from 'react-router';
 import App from './modules/App/App';
+import WelcomePage from './modules/Analysis/pages/ShowResultsPage/WelcomePage';
 
 // require.ensure polyfill for node
 if (typeof require.ensure !== 'function') {
@@ -37,6 +38,10 @@ export default (
           cb(null, require('./modules/Analysis/pages/ShowResultsPage/ShowResultsPage').default);
         });
       }}
+    />
+    <Route
+      path="/welcome"
+      component={WelcomePage}
     />
   </Route>
 );
