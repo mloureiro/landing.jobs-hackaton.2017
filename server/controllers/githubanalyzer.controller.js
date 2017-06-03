@@ -128,15 +128,15 @@ export function getScore(req, res) {
         // Ignore forked repositories
         if (!repo.fork) {
 
-          //Check if user created some aditional branches, good git flow practise
+          // Check if user created some aditional branches, good git flow practise
           githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/branches` })
             .then(branchesResult => {
               if (branchesResult.length > 1) {
                 finalScore += 1;
               }
-            })
+            });
 
-          //Check if user created a README file, with a minimum acceptable content
+          // Check if user created a README file, with a minimum acceptable content
           githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/readme` })
             .then(readmeResult => {
               if (readmeResult != null &&
@@ -146,6 +146,40 @@ export function getScore(req, res) {
                 finalScore += 1;
               }
             })
+            .catch(error => {
+              //No README.md file was found
+            });
+
+          // Check if user has any tests (more or less :/ )
+          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/commits/master` })
+            .then(commitResult => {
+
+              githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/git/trees/${commitResult.data.sha}` })
+                .then(treeResult => {
+
+                  treeResult.data.tree.map((treeObj) => {
+                    if (treeObj.path.toLowerCase().includes("test")) {
+                      finalScore += 1;
+                    }
+                  });
+                });
+            })
+            .catch(error => {
+              console.log(error);
+            });
+
+          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/pulls?state=all` })
+            .then(pullsResponse => {
+
+              pullsResponse.data.map((pull) => {
+                if (pull.merged_at != null) {
+                  finalScore += 1;
+                }
+              });
+            })
+            .catch(error => {
+              console.log(error);
+            });
 
           reposTotalStars += repo.stargazers_count;
           reposTotalWatchers += repo.watchers_count;
