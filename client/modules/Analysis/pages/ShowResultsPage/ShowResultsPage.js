@@ -22,7 +22,7 @@ export function ShowResultsPage(props) {
 
     return (
       <div>
-        <div className={styles['avatarArea']}><Avatar profileData={props.result} /></div>
+        <Avatar profileData={props.result} />
         <TagCloud minSize={12}
             maxSize={35}
             tags={languagesCloud}
