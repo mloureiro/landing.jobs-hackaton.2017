@@ -23,19 +23,23 @@ export function getUser(req, res) {
       const followers = result[2].data;
 
       let languages = {};
-      repos
-        .reduce((previous, current) => {
-          if (current.language !== null) {
-            languages[current.language] = languages[current.language] == null ? 1 : languages[current.language] + 1;
-          }
-        });
+      for (let i = 0; i < repos.length; i++) {
+        if (repos[i].language !== null) {
+          const languageName = repos[i].language;
+          languages[languageName] = languages[languageName] == null ? 1 : languages[languageName] + 1;
+        }
+      }
 
       // Workaround.... I know, there is a better way to sort objects, but, it's 02:32.. I just don't remember... sorry :'()
-      var tuples = [];
-      for (var key in languages) tuples.push([key, languages[key]]);
-      tuples.sort((a, b) => a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0);
+      const tuples = [];
+      for (const key in languages) {
+        tuples.push([key, languages[key]]);
+      }
+      tuples.sort((a, b) => {
+        return a[1] < b[1] ? 1 : a[1] > b[1] ? -1 : 0;
+      });
       languages = {};
-      for (var i = 0; i < tuples.length; i++) {
+      for (let i = 0; i < tuples.length; i++) {
         languages[tuples[i][0]] = tuples[i][1];
         if (i === 2) {
           break;
