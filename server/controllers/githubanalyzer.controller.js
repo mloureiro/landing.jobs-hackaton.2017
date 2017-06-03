@@ -1,6 +1,6 @@
 const GitHubClient = require('../libs/GitHubClient.js').GitHubClient;
 
-const githubCliDotCom = new GitHubClient({
+const github = new GitHubClient({
   baseUri: 'https://api.github.com',
   token: '99c09458d09120f35c0674528c58f279898e82a1'// process.env.TOKEN_GITHUB_DOT_COM
 });
@@ -17,9 +17,9 @@ const README_FILE_SIZE_THRESHOLD = 200;
  * @returns void
  */
 export function getUser(req, res) {
-  const userPromise = githubCliDotCom.getData({ path: `/users/${req.params.user}` });
-  const reposPromise = githubCliDotCom.getData({ path: `/users/${req.params.user}/repos` });
-  const followersPromise = githubCliDotCom.getData({ path: `/users/${req.params.user}/followers` });
+  const userPromise = github.getData({ path: `/users/${req.params.user}` });
+  const reposPromise = github.getData({ path: `/users/${req.params.user}/repos` });
+  const followersPromise = github.getData({ path: `/users/${req.params.user}/followers` });
 
   Promise.all([userPromise, reposPromise, followersPromise])
     .then(result => {
@@ -46,9 +46,6 @@ export function getUser(req, res) {
       languages = {};
       for (let i = 0; i < tuples.length; i++) {
         languages[tuples[i][0]] = tuples[i][1];
-        if (i === 2) {
-          break;
-        }
       }
       // Ends of workaround
 
@@ -102,120 +99,139 @@ export function getUser(req, res) {
 
 /**
  * Get profile score from a github score
- * @param {*} req 
- * @param {*} res 
+ * @param req
+ * @param res
  */
 export function getScore(req, res) {
-  var userPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}` }));
-  var reposPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/repos` }));
-  var followersPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/followers` }));
+  const userPromise = github.getData({ path: `/users/${req.params.user}` });
+  const reposPromise = github.getData({ path: `/users/${req.params.user}/repos` });
 
-  Promise.all([userPromise, reposPromise, followersPromise])
+  Promise.all([userPromise, reposPromise])
     .then(result => {
-      var user = result[0].data;
-      var repos = result[1].data;
-      var followers = result[2].data;
+      const user = result[0].data;
+      const repos = result[1].data;
 
-      var userHasBlog = (user.blog != null && user.blog != '');
-      var userTotalFollowers = user.followers;
-      var reposTotalStars = 0;
-      var reposTotalWatchers = 0;
+      const userHasBlog = (user.blog !== null && user.blog !== '');
+      const userTotalFollowers = user.followers;
+      let reposTotalStars = 0;
+      let reposTotalWatchers = 0;
+      let repoScore = 0;
+      const roles = [];
+      let finalScore = 0;
 
-      var finalScore = 0;
+      const promises = repos
+        .filter((repo) => !repo.fork)
+        .map((repo) => {
+          const brancesPromise = github.getData({ path: `/repos/${req.params.user}/${repo.name}/branches` });
+          // const readmePromise = github.getData({ path: `/repos/${req.params.user}/${repo.name}/readme` });
+          const testsPromise = github.getData({ path: `/repos/${req.params.user}/${repo.name}/commits/master` });
+          const pullsPromise = github.getData({ path: `/repos/${req.params.user}/${repo.name}/pulls?state=all` });
+          const commitsPromise = github.getData({ path: `/repos/${req.params.user}/${repo.name}/commits/master` })
 
-      repos.map((repo) => {
+          return [Promise.resolve(repo), brancesPromise, /*readmePromise,*/ testsPromise, pullsPromise, commitsPromise];
+        });
 
-        // Ignore forked repositories
-        if (!repo.fork) {
-
-          // Check if user created some aditional branches, good git flow practise
-          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/branches` })
-            .then(branchesResult => {
-              if (branchesResult.length > 1) {
-                finalScore += 1;
-              }
-            });
-
-          // Check if user created a README file, with a minimum acceptable content
-          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/readme` })
-            .then(readmeResult => {
-              if (readmeResult != null &&
-                readmeResult.type == 'file' &&
-                readmeResult.size > README_FILE_SIZE_THRESHOLD) {
-
-                finalScore += 1;
-              }
-            })
-            .catch(error => {
-              //No README.md file was found
-            });
-
-          // Check if user has any tests (more or less :/ )
-          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/commits/master` })
-            .then(commitResult => {
-
-              githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/git/trees/${commitResult.data.sha}` })
-                .then(treeResult => {
-
-                  treeResult.data.tree.map((treeObj) => {
-                    if (treeObj.path.toLowerCase().includes("test")) {
-                      finalScore += 1;
-                    }
-                  });
-                });
-            })
-            .catch(error => {
-              console.log(error);
-            });
-
-          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/pulls?state=all` })
-            .then(pullsResponse => {
-
-              pullsResponse.data.map((pull) => {
-                if (pull.merged_at != null) {
-                  finalScore += 1;
-                }
-              });
-            })
-            .catch(error => {
-              console.log(error);
-            });
-
-          reposTotalStars += repo.stargazers_count;
-          reposTotalWatchers += repo.watchers_count;
-
-          if (repo.forks_count >= FORKS_THRESHOLD) {
-            finalScore += 1;
-          }
-
-          if (repo.watchers_count >= WATCHERS_THRESHOLD) {
-            finalScore += 1;
-          }
-
-          if (repo.stargazers_count >= STARGAZERS_THRESHOLD) {
-            finalScore += 1;
-          }
+      Promise
+        .all(promises)
+        .then(reposResult => {
+          let accumulatedDataLength = 0;
 
           if (userHasBlog) {
-            finalScore += 1;
+            roles.push(`User ${req.params.user} with blog, earn 1 point`);
+            repoScore += 1;
           }
 
-          // Final Score Calculations
-          finalScore += reposTotalStars;
-          finalScore += reposTotalWatchers;
-        }
-      });
+          for (let i = 0; i < reposResult.length; i++) {
+            const repoItemResult = reposResult[i];
+            const repo = repoItemResult[0] || {};
+            const branchesResult = repoItemResult[1].data || [];
+            // const readmeResult = repoItemResult[1].data;
+            const testsResult = repoItemResult[2].data || [];
+            const pullsResult = repoItemResult[3].data || [];
+            const commitsResult = repoItemResult[4].data || [];
 
-      res.json({
-        total_score: finalScore
-      });
+            // Check if user created some aditional branches, good git flow practise
+            if (branchesResult.length > 1) {
+              roles.push(`Repository ${repo.name} with branchs, earn 1 point`);
+              repoScore += 1;
+            }
 
-    })
-    .catch(function (error) {
-      console.log(error);
-      res.status(500).send(error);
+            // Check for merged pull requests
+            const pullRequestWithMergeCount = pullsResult
+              .filter((pull) => pull.merged_at != null)
+              .length;
+            if (pullRequestWithMergeCount > 0) {
+              repoScore += pullRequestWithMergeCount;
+              roles.push(`Accepted pull request, earn ${pullRequestWithMergeCount} point(s)`);
+            }
+
+            reposTotalStars += repo.stargazers_count;
+            reposTotalWatchers += repo.watchers_count;
+
+            if (repo.forks_count >= FORKS_THRESHOLD) {
+              roles.push(`Repository ${repo.name} with many forks, earn 1 point`);
+              repoScore += 1;
+            }
+
+            if (repo.watchers_count >= WATCHERS_THRESHOLD) {
+              roles.push(`Repository ${repo.name} with many watchers, earn 1 point`);
+              repoScore += 1;
+            }
+
+            if (repo.stargazers_count >= STARGAZERS_THRESHOLD) {
+              roles.push(`Repository ${repo.name} with many stargazers, earn 1 point`);
+              repoScore += 1;
+            }
+
+            // Final Score Calculations
+            repoScore += repo.stargazers_count;
+            repoScore += repo.watchers_count;
+
+            finalScore += repoScore;
+
+            accumulatedDataLength = branchesResult.length +
+              testsResult.length +
+              pullsResult.length +
+              commitsResult.length;
+          }
+
+          res.json({
+            total_score: finalScore,
+            level: getLevelByScore(finalScore),
+            roles: roles,
+            quality: getQuality(accumulatedDataLength)
+          });
+        }).catch(error => {
+          console.log(error);
+        });
     });
-}
+};
+
+/**
+ * Get level by score
+ * @param req
+ * @returns int
+ */
+const getLevelByScore = function (score) {
+  // inspired by https://gamedev.stackexchange.com/questions/13638/algorithm-for-dynamically-calculating-a-level-based-on-experience-points
+  const constant = 10;
+  return constant * Math.sqrt(score);
+};
+
+/**
+ * Get data quality by score
+ * @param req
+ * @returns string
+ */
+const getQuality = function (dataLength) {
+  if (dataLength <= 5) {
+    return 'Poor';
+  } else if (dataLength > 5 && dataLength <= 10) {
+    return 'Medium';
+  } else {
+    return 'High';
+  }
+};
 
 /**
  * Get social score from a github user
@@ -224,7 +240,7 @@ export function getScore(req, res) {
  * @returns void
  */
 export function getSocialScore(req, res) {
-  githubCliDotCom
+  github
     .getData({ path: `/users/${req.params.user}/repos` })
     .then(result => {
       const repos = result.data;
@@ -232,7 +248,7 @@ export function getSocialScore(req, res) {
       const repoDetailsPromises = repos
         .filter(repo => repo != null && repo.full_name != null)
         .map(repo => {
-          return githubCliDotCom.getData({ path: `/repos/${repo.full_name}` });
+          return github.getData({ path: `/repos/${repo.full_name}` });
         });
 
       Promise
@@ -243,12 +259,12 @@ export function getSocialScore(req, res) {
             .filter(repoResult => repoResult.fork === true)
             .map(repoResult => {
               const fullPath = `/repos/${repoResult.parent.full_name}/pulls?head=${req.params.user}:${repoResult.default_branch}&state=all`;
-              return githubCliDotCom.getData({ path: fullPath });
+              return github.getData({ path: fullPath });
             });
 
-            // 0-5 => qualidade baixa
-            // 6-10 => qualidade media
-            // >10 => qualidade alta
+          // 0-5 => qualidade baixa
+          // 6-10 => qualidade media
+          // >10 => qualidade alta
 
 
 
@@ -282,7 +298,7 @@ export function getSocialScore(req, res) {
  * @returns void
  */
 export function getRepos(req, res) {
-  githubCliDotCom.getData({ path: `/users/${req.params.user}/repos` })
+  github.getData({ path: `/users/${req.params.user}/repos` })
     .then(response => {
       res.json(response.data);
     });
