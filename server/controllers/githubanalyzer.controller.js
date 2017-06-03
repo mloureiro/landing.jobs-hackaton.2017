@@ -262,19 +262,43 @@ export function getSocialScore(req, res) {
               return github.getData({ path: fullPath });
             });
 
-          // 0-5 => qualidade baixa
-          // 6-10 => qualidade media
-          // >10 => qualidade alta
-
-
-
           Promise
             .all(pullsPromises)
             .then(pullsValues => {
               const pulls = pullsValues
                 .map(pulls => pulls.data);
 
-              res.json({});
+              let finalScore = 0;
+              const roles = [];
+
+              for (let i = 0; i < pulls.length; i++) {
+                const pull = pulls[i];
+
+                console.log({
+                  state: pull.state,
+                  merged_at: pull.merged_at
+                });
+
+                if (pull.state === 'open') {
+                  finalScore++;
+                  roles.push(`Repository with pull request, earn 1 point`);
+                } else if (pull.state === 'closed') {
+                  if (pull.merged_at !== null) {
+                    finalScore += 3;
+                    roles.push(`Repository with a merged pull request, earn 3 point`);
+                  } else {
+                    finalScore += 2;
+                    roles.push(`Repository with a not merged pull request, earn 2 point`);
+                  }
+                }
+              }
+
+              res.json({
+                total_score: finalScore,
+                level: getLevelByScore(finalScore),
+                roles: roles,
+                quality: getQuality(pulls.length)
+              });
             })
             .catch(error => {
               console.log(error);
