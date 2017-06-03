@@ -1,14 +1,24 @@
 import React from 'react';
-import Input from '../../components/ShowResults/Input';
+import UsernameInput from '../../components/ShowResults/UsernameInput';
 
-export default function () {
-  return (
-    <div>
-      <Input
+export default class WelcomePage extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleSubmit(value) {
+    window.location.replace(`/results/${value}`);
+  }
+
+  render() {
+    return (
+      <UsernameInput
         name="username"
-        placeholder="Yep, insert your GitHub username!"
+        placeholder="Insert GitHub User Name..."
+        handleSubmit={this.handleSubmit}
       />
-    </div>
-  );
+    );
+  }
 }
-
