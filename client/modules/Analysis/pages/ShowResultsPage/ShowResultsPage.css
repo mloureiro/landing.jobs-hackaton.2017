@@ -1,3 +1,12 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.statsWrapper {
+  display: flex;
+}
+
 .avatarArea {
   width: 300px;
   float: left;

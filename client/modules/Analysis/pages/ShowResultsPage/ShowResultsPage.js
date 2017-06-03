@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import Helmet from 'react-helmet'
 import { TagCloud } from 'react-tagcloud';
 import { connect } from 'react-redux';
 import Avatar from '../../components/Avatar/Avatar'
@@ -14,27 +13,27 @@ import { fetchResult } from '../../AnalysisActions';
 import { getResult } from '../../AnalysisReducer';
 
 export function ShowResultsPage(props) {
-  if (props.result) {
-    let languagesCloud = []
-    for (let key in props.result.languages) {
-      languagesCloud.push({ value: key, count: props.result.languages[key] })
-    }
 
-    return (
-      <div>
-        <Avatar profileData={props.result} />
-        <TagCloud minSize={12}
-            maxSize={35}
-            tags={languagesCloud}
-            onClick={tag => alert(`'${tag.value}' was selected!`)} />
-        <div className={styles['scoreArea']}><Score className={styles.scoreArea} score={20} /></div>
-      </div>
-    );
+  if (!props.result) {
+    return <div>Profile not found</div>;
+  }
+
+  let languagesCloud = [];
+  for (let key in props.result.languages) {
+    languagesCloud.push({value: key, count: props.result.languages[key]});
   }
 
   return (
-    <div>
-      Profile not found
+    <div className={styles.wrapper}>
+      <Avatar profileData={props.result}/>
+      <div className={styles.statsWrapper}>
+        <Score score={83} />
+        <TagCloud
+          minSize={30}
+          maxSize={50}
+          tags={languagesCloud}
+        />
+      </div>
     </div>
   );
 }

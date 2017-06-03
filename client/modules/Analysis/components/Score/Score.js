@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import CircularProgressbar from 'react-circular-progressbar';
 
 // Import Style
 import styles from './Score.css';
@@ -6,14 +7,15 @@ import styles from './Score.css';
 export default class Score extends Component {
   static propTypes = {
     score: PropTypes.number.isRequired,
-  }
+  };
 
   render() {
-    const score = this.props.score;
     return (
-      <div className={styles['scoreNumber']}>
-        {score}
-      </div>
+      <CircularProgressbar
+        className={styles.CircularProgressbar}
+        percentage={this.props.score}
+        initialAnimation
+      />
     );
   }
 }

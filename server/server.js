@@ -78,9 +78,29 @@ const renderFullPage = (html, initialState) => {
       </head>
       <body>
         <style>
-          /* @TODO remove hack to hide sidebar */
-          #root > div > div:first-child {
-            display: none;
+          .CircularProgressbar {
+            width: 200px;
+          }
+          
+          .CircularProgressbar .CircularProgressbar-path {
+            stroke: #3e98c7;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease 0s;
+          }
+          
+          .CircularProgressbar .CircularProgressbar-trail {
+            stroke: #d6d6d6;
+          }
+          
+          .CircularProgressbar .CircularProgressbar-text {
+            fill: #3e98c7;
+            font-size: 20px;
+            dominant-baseline: middle;
+            text-anchor: middle;
+          }
+          
+          .tag-cloud {
+            max-width: 400px;
           }
         </style>
         <div id="root">${html}</div>
