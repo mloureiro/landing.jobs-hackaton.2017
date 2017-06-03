@@ -124,6 +124,14 @@ export function getScore(req, res) {
                 // Ignore forked repositories
                 if(!repo.fork){
 
+                    //Check if user created some aditional branches, good git flow practise
+                    githubCliDotCom.getData({path: `/repos/${req.params.user}/${repo.name}/branches`})
+                    .then(branchesResult => {
+                        if(branchesResult.length > 1){
+                            finalScore += 1;
+                        }
+                    })
+
                     //Check if user created a README file, with a minimum acceptable content
                     githubCliDotCom.getData({path: `/repos/${req.params.user}/${repo.name}/readme`})
                     .then(readmeResult => {
@@ -131,31 +139,27 @@ export function getScore(req, res) {
                             readmeResult.type == 'file' && 
                             readmeResult.size > README_FILE_SIZE_THRESHOLD) {
 
-                            finalScore += 2;
+                            finalScore += 1;
                         }
                     })
-
-                    var lastPushDate = repo.pushed_at;
-
-                    var diff = Math.abs(new Date() - lastPushDate);
 
                     reposTotalStars += repo.stargazers_count;
                     reposTotalWatchers += repo.watchers_count;
 
                     if(repo.forks_count >= FORKS_THRESHOLD) {
-                        finalScore += 2;
+                        finalScore += 1;
                     }
 
                     if(repo.watchers_count >= WATCHERS_THRESHOLD) {
-                        finalScore += 2;
+                        finalScore += 1;
                     }
 
                     if(repo.stargazers_count >= STARGAZERS_THRESHOLD) {
-                        finalScore += 2;
+                        finalScore += 1;
                     }
 
                     if(userHasBlog) {
-                        finalScore += 2;
+                        finalScore += 1;
                     }
 
                     // Final Score Calculations
@@ -165,10 +169,6 @@ export function getScore(req, res) {
             });
 
             res.json({
-                totalStars: reposTotalStars,
-                totalWatchers: reposTotalWatchers,
-                userFolowers: userTotalFollowers,
-                hasBlog: userHasBlog,
                 total_score: finalScore
             });
             
