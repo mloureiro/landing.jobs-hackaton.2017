@@ -84,9 +84,13 @@ export function getUser(req, res) {
         status: 'ok',
         links: [
           {
-            rel: 'Amazing anazyle #1',
-            url: `/analyzer/${req.params.user}/github/analyze1`
+            rel: 'Get tech score',
+            url: `/analyzer/${req.params.user}/github/score`
           },
+          {
+            rel: 'Get social score',
+            url: `/analyzer/${req.params.user}/github/socialscore`
+          }
         ]
       });
     })
@@ -102,81 +106,81 @@ export function getUser(req, res) {
  * @param {*} res 
  */
 export function getScore(req, res) {
-    var userPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}` }));
-    var reposPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/repos` }));
-    var followersPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/followers` }));
+  var userPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}` }));
+  var reposPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/repos` }));
+  var followersPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/followers` }));
 
-    Promise.all([userPromise, reposPromise, followersPromise])
-        .then(result =>  {
-            var user = result[0].data;
-            var repos = result[1].data;
-            var followers = result[2].data;
+  Promise.all([userPromise, reposPromise, followersPromise])
+    .then(result => {
+      var user = result[0].data;
+      var repos = result[1].data;
+      var followers = result[2].data;
 
-            var userHasBlog = (user.blog != null && user.blog != '');
-            var userTotalFollowers = user.followers;
-            var reposTotalStars = 0;
-            var reposTotalWatchers = 0;
+      var userHasBlog = (user.blog != null && user.blog != '');
+      var userTotalFollowers = user.followers;
+      var reposTotalStars = 0;
+      var reposTotalWatchers = 0;
 
-            var finalScore = 0;
+      var finalScore = 0;
 
-            repos.map((repo) => {
+      repos.map((repo) => {
 
-                // Ignore forked repositories
-                if(!repo.fork){
+        // Ignore forked repositories
+        if (!repo.fork) {
 
-                    //Check if user created some aditional branches, good git flow practise
-                    githubCliDotCom.getData({path: `/repos/${req.params.user}/${repo.name}/branches`})
-                    .then(branchesResult => {
-                        if(branchesResult.length > 1){
-                            finalScore += 1;
-                        }
-                    })
+          //Check if user created some aditional branches, good git flow practise
+          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/branches` })
+            .then(branchesResult => {
+              if (branchesResult.length > 1) {
+                finalScore += 1;
+              }
+            })
 
-                    //Check if user created a README file, with a minimum acceptable content
-                    githubCliDotCom.getData({path: `/repos/${req.params.user}/${repo.name}/readme`})
-                    .then(readmeResult => {
-                        if(readmeResult != null &&
-                            readmeResult.type == 'file' && 
-                            readmeResult.size > README_FILE_SIZE_THRESHOLD) {
+          //Check if user created a README file, with a minimum acceptable content
+          githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/readme` })
+            .then(readmeResult => {
+              if (readmeResult != null &&
+                readmeResult.type == 'file' &&
+                readmeResult.size > README_FILE_SIZE_THRESHOLD) {
 
-                            finalScore += 1;
-                        }
-                    })
+                finalScore += 1;
+              }
+            })
 
-                    reposTotalStars += repo.stargazers_count;
-                    reposTotalWatchers += repo.watchers_count;
+          reposTotalStars += repo.stargazers_count;
+          reposTotalWatchers += repo.watchers_count;
 
-                    if(repo.forks_count >= FORKS_THRESHOLD) {
-                        finalScore += 1;
-                    }
+          if (repo.forks_count >= FORKS_THRESHOLD) {
+            finalScore += 1;
+          }
 
-                    if(repo.watchers_count >= WATCHERS_THRESHOLD) {
-                        finalScore += 1;
-                    }
+          if (repo.watchers_count >= WATCHERS_THRESHOLD) {
+            finalScore += 1;
+          }
 
-                    if(repo.stargazers_count >= STARGAZERS_THRESHOLD) {
-                        finalScore += 1;
-                    }
+          if (repo.stargazers_count >= STARGAZERS_THRESHOLD) {
+            finalScore += 1;
+          }
 
-                    if(userHasBlog) {
-                        finalScore += 1;
-                    }
+          if (userHasBlog) {
+            finalScore += 1;
+          }
 
-                    // Final Score Calculations
-                    finalScore += reposTotalStars;
-                    finalScore += reposTotalWatchers;
-                }
-            });
+          // Final Score Calculations
+          finalScore += reposTotalStars;
+          finalScore += reposTotalWatchers;
+        }
+      });
 
-            res.json({
-                total_score: finalScore
-            });
-            
-        })
-        .catch(function (error) {
-            console.log(error);
-            res.status(500).send(error);
-        });
+      res.json({
+        total_score: finalScore
+      });
+
+    })
+    .catch(function (error) {
+      console.log(error);
+      res.status(500).send(error);
+    });
 }
 
 /**
@@ -186,38 +190,51 @@ export function getScore(req, res) {
  * @returns void
  */
 export function getSocialScore(req, res) {
-    //var userPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}` }));
-    var reposPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/repos` }));
-    //var followersPromise = Promise.resolve(githubCliDotCom.getData({ path: `/users/${req.params.user}/followers` }));
+  githubCliDotCom
+    .getData({ path: `/users/${req.params.user}/repos` })
+    .then(result => {
+      const repos = result.data;
 
-    Promise.all([reposPromise])
-        .then(result =>  {
-            var repos = result[0].data;
+      const repoDetailsPromises = repos
+        .filter(repo => repo != null && repo.full_name != null && repo.full_name.indexOf('.') === -1)
+        .map(repo => {
+          console.log('repo.full_name=>', repo.full_name);
+          console.log('repo.name=>', repo.name);
 
-            var statusArray = [];
+          return githubCliDotCom.getData(`/repos/${repo.full_name}`);
+        });
 
-            repos.map((repo) => {
-                //TODO(Nuno): Check if user is contributing to any projects
+      Promise
+        .all(repoDetailsPromises)
+        .then(repoDetailsValues => {
+          const reposDetails = repoDetailsValues.data;
 
-                githubCliDotCom.getData({ path: `/repos/${req.params.user}/${repo.name}/pulls?state=closed` })
-                    .then(pulls => {
+          console.log('----------------------2-------------------', reposDetails.length);
 
-                        statusArray.push(pulls);
-
-                        //pulls.map((pullRequest) => { });
-                    })
-                    .catch(error => {
-                        console.log(error);
-                    });
+          const pullsPromises = reposDetails
+            .filter(repoResult => repoResult.fork === true)
+            .map(repoResult => {
+              console.log(repoResult);
+              const fullPath = `/repos/${repoResult.parent.full_name}/pulls?head=${req.params.user}:${repoResult.default_branch}&state=all`;
+              return githubCliDotCom.getData({ path: fullPath });
             });
 
-             res.json(statusArray);
-
-        })
-        .catch(error => {
-            console.log(error);
-            res.status(500).send(error);
+          Promise
+            .all(pullsPromises)
+            .then(pullsValues => res.json(pullsValues))
+            .catch(error => {
+              console.log(error);
+              res.status(500).send(error);
+            });
+        }).catch(error => {
+          console.log(error);
+          res.status(500).send(error);
         });
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).send(error);
+    });
 }
 
 /**
