@@ -77,6 +77,12 @@ const renderFullPage = (html, initialState) => {
           crossorigin="anonymous" />
       </head>
       <body>
+        <style>
+          /* @TODO remove hack to hide sidebar */
+          #root > div > div:first-child {
+            display: none;
+          }
+        </style>
         <div id="root">${html}</div>
         <script>
           window.__INITIAL_STATE__ = ${JSON.stringify(initialState)};
